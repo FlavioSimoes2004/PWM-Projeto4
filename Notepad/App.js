@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TextInput, Button, View, FlatList, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GradientText from './components/GradientText'
+import { useFonts } from 'expo-font';
 
 export default function App() {
   const [note, setNote] = useState({ title: '', description: '' });
@@ -10,7 +12,16 @@ export default function App() {
     loadNotes();
   }, []);
 
+  const [fontsLoaded] = useFonts({
+    'Autography': require('./assets/fonts/Autography.otf'),
+  });
+
   const saveNote = async () => {
+    if (note.title === '' || note.description === '') {
+      Alert.alert('Error', 'Please fill in both the title and description.');
+      return;
+    }
+
     const newNotes = [...notes, note];
     await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
     setNotes(newNotes);
@@ -22,10 +33,7 @@ export default function App() {
     newNotes.splice(index, 1);
     await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
     setNotes(newNotes);
-    
   };
-  
-  
 
   const loadNotes = async () => {
     const storedNotes = await AsyncStorage.getItem('notes');
@@ -51,19 +59,18 @@ export default function App() {
       { cancelable: false },
     );
   };
-  
 
   const renderDeleteButton = (index) => {
     return (
       <TouchableOpacity onPress={() => deleteNoteAlert(index)}>
-        <Text style={styles.deleteButton} onPress={deleteNote}>Delete</Text>
+        <Text style={styles.deleteButton}>Delete</Text>
       </TouchableOpacity>
     );
   };
 
   const renderItem = ({ item, index }) => (
-    <View style={styles.noteContainer}>
-      <View>
+    <View style={styles.noteContainer} key={index}>
+      <View style={styles.noteInfos}>
         <Text style={styles.noteTitle}>{item.title}</Text>
         <Text>{item.description}</Text>
       </View>
@@ -73,6 +80,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <GradientText text={'NiN'} style={styles.appTitle} gradientColors={['#ff7e5f', '#172892']}></GradientText>
       <View style={styles.form}>
         <TextInput
           style={styles.input}
@@ -89,6 +97,7 @@ export default function App() {
           onChangeText={(text) => setNote({ ...note, description: text })}
         />
         <Button
+          style={styles.saveButton}
           title="Save"
           onPress={saveNote}
         />
@@ -108,11 +117,13 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 0,
+    height: '80%',
     backgroundColor: '#fff',
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: 40,
     paddingHorizontal: 10,
+    overflow: 'scroll'
   },
 
   form: {
@@ -131,6 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: '20%',
+    marginBottom: '10%'
   },
 
   input: {
@@ -150,6 +162,7 @@ const styles = StyleSheet.create({
 
   noteList: {
     paddingBottom: 20,
+    alignItems: 'center'
   },
 
   noteContainer: {
@@ -169,7 +182,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    maxWidth: '90%',
+    width: '90%'
+  },
+
+
+  noteInfos: {
+    width: '70%',
   },
 
   noteTitle: {
@@ -184,9 +202,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 10,
   },
-  
+
   emptyListText: {
     textAlign: 'center',
     marginTop: 20,
   },
+
+  appTitle:
+  {
+    fontFamily: 'Autography',
+    fontSize: 40,
+  }
+  
 });
