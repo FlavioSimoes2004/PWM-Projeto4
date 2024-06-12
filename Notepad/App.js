@@ -5,7 +5,8 @@ import GradientText from './components/GradientText'
 import { useFonts } from 'expo-font';
 
 export default function App() {
-  const [note, setNote] = useState({ title: '', description: '' });
+  
+  const [note, setNote] = useState({ title: '', description: '', date: '' });
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
@@ -21,11 +22,14 @@ export default function App() {
       Alert.alert('Error', 'Please fill in both the title and description.');
       return;
     }
+    
+    const cDate = new Date();
+    note.date = cDate.toDateString();
 
     const newNotes = [...notes, note];
     await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
     setNotes(newNotes);
-    setNote({ title: '', description: '' });
+    setNote({ title: '', description: '', date: ''});
   };
 
   const deleteNote = async (index) => {
@@ -71,6 +75,7 @@ export default function App() {
   const renderItem = ({ item, index }) => (
     <View style={styles.noteContainer} key={index}>
       <View style={styles.noteInfos}>
+        <Text style={styles.noteDate}>{item.date}</Text> 
         <Text style={styles.noteTitle}>{item.title}</Text>
         <Text>{item.description}</Text>
       </View>
@@ -194,6 +199,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 5,
     fontSize: 16,
+  },
+
+  noteDate: {
+    marginBottom: 3,
+    color: 'gray',
   },
 
   deleteButton: {
