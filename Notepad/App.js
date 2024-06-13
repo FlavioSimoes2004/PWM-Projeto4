@@ -8,6 +8,7 @@ export default function App() {
   
   const [note, setNote] = useState({ title: '', description: '', date: '' });
   const [notes, setNotes] = useState([]);
+  const [editIndex, setEditIndex] = useState(null);
 
   useEffect(() => {
     loadNotes();
@@ -26,7 +27,14 @@ export default function App() {
     const cDate = new Date();
     note.date = cDate.toDateString();
 
-    const newNotes = [...notes, note];
+    let newNotes = [...notes];
+    if (editIndex !== null) {
+        newNotes[editIndex] = note;
+        setEditIndex(null);
+    } else {
+        newNotes = [...notes, note];
+    }
+
     await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
     setNotes(newNotes);
     setNote({ title: '', description: '', date: ''});
@@ -64,6 +72,19 @@ export default function App() {
     );
   };
 
+  const editNote = (index) => {
+      setNote(notes[index]);
+      setEditIndex(index);
+  };
+
+  const renderEditButton = (index) => {
+    return (
+        <TouchableOpacity onPress={() => editNote(index)}>
+            <Text style={styles.editButton}>Edit</Text>
+        </TouchableOpacity>
+    );
+  };
+  
   const renderDeleteButton = (index) => {
     return (
       <TouchableOpacity onPress={() => deleteNoteAlert(index)}>
@@ -79,7 +100,10 @@ export default function App() {
         <Text style={styles.noteTitle}>{item.title}</Text>
         <Text>{item.description}</Text>
       </View>
-      {renderDeleteButton(index)}
+      <View style={styles.buttonContainer}>
+        {renderEditButton(index)}
+        {renderDeleteButton(index)}
+      </View>
     </View>
   );
 
@@ -213,6 +237,17 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 
+  editButton: {
+    color: 'blue',
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginLeft: 10,
+  },
+
+  buttonContainer: {
+    flexDirection: 'row',
+  },
+  
   emptyListText: {
     textAlign: 'center',
     marginTop: 20,
