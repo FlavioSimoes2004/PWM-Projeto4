@@ -1,29 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TextInput, Button, View, FlatList, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import GradientText from './components/GradientText'
 import { useFonts } from 'expo-font';
+import * as Notifications from 'expo-notifications'
+
+Notifications.setNotificationHandler({
+  handleNotification: async() => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowAlert: true,
+  })
+})
 
 export default function App() {
   
-  const [note, setNote] = useState({ title: '', description: '', date: '' });
+  const [note, setNote] = useState({ title: '', description: '', date: '', reminder: new Date()});
   const [notes, setNotes] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
+  const [selectDate, setSelectDate] = useState(new Date());
+  const [selectTime, setSelectTime] = useState(new Date());
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+  
 
   useEffect(() => {
     loadNotes();
   }, []);
 
-  const [fontsLoaded] = useFonts({
+  /*const [fontsLoaded] = useFonts({
     'Autography': require('./assets/fonts/Autography.otf'),
-  });
+  });*/
 
   const saveNote = async () => {
     if (note.title === '' || note.description === '') {
       Alert.alert('Error', 'Please fill in both the title and description.');
       return;
     }
-    
+
+    note.reminder.setUTCFullYear(selectDate.getUTCFullYear(), selectDate.getUTCMonth(), selectDate.getDate());
+    note.reminder.setUTCMinutes(selectTime.getMinutes());
+    note.reminder.setUTCHours(selectTime.getHours() + 3);
+    note.reminder.setUTCSeconds(0);
+    Alert.alert(note.reminder.toString());
+
     const cDate = new Date();
     note.date = cDate.toDateString();
 
@@ -37,7 +58,8 @@ export default function App() {
 
     await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
     setNotes(newNotes);
-    setNote({ title: '', description: '', date: ''});
+    setNote({ title: '', description: '', date: '', reminder: note.reminder});
+    await handleReminder();
   };
 
   const deleteNote = async (index) => {
@@ -76,6 +98,51 @@ export default function App() {
       setNote(notes[index]);
       setEditIndex(index);
   };
+
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleDateConfirm = (date) => {
+    console.warn(date);
+    setSelectDate(date);
+    hideDatePicker();
+  };
+
+  const showTimePicker = () => {
+    setTimePickerVisibility(true);
+  };
+
+  const hideTimePicker = () => {
+    setTimePickerVisibility(false);
+  };
+
+  const handleTimeConfirm = (date) => {
+    console.warn(date);
+    setSelectTime(date);
+    hideTimePicker();
+  };
+
+  async function handleReminder(){
+    const {status} = await Notifications.getPermissionsAsync();
+    if(status !== 'granted'){
+      alert('If you want a notification, please set the permision on first');
+      return;
+    }
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: note.title,
+        body: note.description,
+      },
+      trigger: {
+        date: note.reminder,
+      }
+    })
+  }
 
   const renderEditButton = (index) => {
     return (
@@ -125,6 +192,23 @@ export default function App() {
           value={note.description}
           onChangeText={(text) => setNote({ ...note, description: text })}
         />
+
+        <Text>Reminder(Optional)</Text>
+        <Button  title="Select Date" style={styles.button} onPress={showDatePicker} />
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          onConfirm={handleDateConfirm}
+          onCancel={hideDatePicker}
+        />
+        <Button title="Select Time" style={styles.button} onPress={showTimePicker} />
+        <DateTimePickerModal
+          isVisible={isTimePickerVisible}
+          mode="time"
+          onConfirm={handleTimeConfirm}
+          onCancel={hideTimePicker}
+        />
+
         <Button
           style={styles.saveButton}
           title="Save"
@@ -147,10 +231,10 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 0,
-    height: '80%',
+    height: '95%',
     backgroundColor: '#fff',
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 30,
     paddingHorizontal: 10,
     overflow: 'scroll'
   },
@@ -171,7 +255,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: '20%',
-    marginBottom: '10%'
+    marginBottom: '5%'
   },
 
   input: {
@@ -199,7 +283,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
-    marginTop: 10,
+    marginTop: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -257,6 +341,11 @@ const styles = StyleSheet.create({
   {
     fontFamily: 'Autography',
     fontSize: 40,
-  }
+  },
   
+  button:
+  {
+    fontSize: 1,
+  }
+
 });
