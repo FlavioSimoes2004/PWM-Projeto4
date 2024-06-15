@@ -1,43 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TextInput, Button, View, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, TextInput, Button, View, FlatList, TouchableOpacity, Alert, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import GradientText from './components/GradientText'
+import GradientText from './components/GradientText';
 import { useFonts } from 'expo-font';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function App() {
-  
-  const [note, setNote] = useState({ title: '', description: '', date: '' });
+  const [note, setNote] = useState({ title: '', description: '', date: '', imagePath: '' });
   const [notes, setNotes] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
 
+  const [image, setImage] = useState(null);
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+  
   useEffect(() => {
     loadNotes();
   }, []);
 
   const [fontsLoaded] = useFonts({
-    'Autography': require('./assets/fonts/Autography.otf'),
+    Autography: require('./assets/fonts/Autography.otf'),
   });
+
 
   const saveNote = async () => {
     if (note.title === '' || note.description === '') {
       Alert.alert('Error', 'Please fill in both the title and description.');
       return;
     }
-    
+
     const cDate = new Date();
     note.date = cDate.toDateString();
 
+    note.imagePath = image;
+
     let newNotes = [...notes];
     if (editIndex !== null) {
-        newNotes[editIndex] = note;
-        setEditIndex(null);
+      newNotes[editIndex] = note;
+      setEditIndex(null);
     } else {
-        newNotes = [...notes, note];
+      newNotes = [...notes, note];
     }
 
     await AsyncStorage.setItem('notes', JSON.stringify(newNotes));
     setNotes(newNotes);
-    setNote({ title: '', description: '', date: ''});
+    setNote({ title: '', description: '', date: '', imagePath: '' });
   };
 
   const deleteNote = async (index) => {
@@ -68,23 +89,23 @@ export default function App() {
           onPress: () => deleteNote(index),
         },
       ],
-      { cancelable: false },
+      { cancelable: false }
     );
   };
 
   const editNote = (index) => {
-      setNote(notes[index]);
-      setEditIndex(index);
+    setNote(notes[index]);
+    setEditIndex(index);
   };
 
   const renderEditButton = (index) => {
     return (
-        <TouchableOpacity onPress={() => editNote(index)}>
-            <Text style={styles.editButton}>Edit</Text>
-        </TouchableOpacity>
+      <TouchableOpacity onPress={() => editNote(index)}>
+        <Text style={styles.editButton}>Edit</Text>
+      </TouchableOpacity>
     );
   };
-  
+
   const renderDeleteButton = (index) => {
     return (
       <TouchableOpacity onPress={() => deleteNoteAlert(index)}>
@@ -96,9 +117,10 @@ export default function App() {
   const renderItem = ({ item, index }) => (
     <View style={styles.noteContainer} key={index}>
       <View style={styles.noteInfos}>
-        <Text style={styles.noteDate}>{item.date}</Text> 
+        <Text style={styles.noteDate}>{item.date}</Text>
         <Text style={styles.noteTitle}>{item.title}</Text>
         <Text>{item.description}</Text>
+        <Image source={{ uri: item.imagePath }} style={styles.image} />
       </View>
       <View style={styles.buttonContainer}>
         {renderEditButton(index)}
@@ -109,7 +131,10 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <GradientText text={'NiN'} style={styles.appTitle} gradientColors={['#ff7e5f', '#172892']}></GradientText>
+      <GradientText
+        text={'NiN'}
+        style={styles.appTitle}
+        gradientColors={['#ff7e5f', '#172892']}></GradientText>
       <View style={styles.form}>
         <TextInput
           style={styles.input}
@@ -125,11 +150,8 @@ export default function App() {
           value={note.description}
           onChangeText={(text) => setNote({ ...note, description: text })}
         />
-        <Button
-          style={styles.saveButton}
-          title="Save"
-          onPress={saveNote}
-        />
+        <Button title="Pick an image" onPress={pickImage} />
+        <Button style={styles.saveButton} title="Save" onPress={saveNote} />
       </View>
       <FlatList
         data={notes}
@@ -152,7 +174,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 40,
     paddingHorizontal: 10,
-    overflow: 'scroll'
+    overflow: 'scroll',
   },
 
   form: {
@@ -171,7 +193,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: '20%',
-    marginBottom: '10%'
+    marginBottom: '10%',
   },
 
   input: {
@@ -191,7 +213,7 @@ const styles = StyleSheet.create({
 
   noteList: {
     paddingBottom: 20,
-    alignItems: 'center'
+    alignItems: 'center',
   },
 
   noteContainer: {
@@ -211,9 +233,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    width: '90%'
+    width: '90%',
   },
-
 
   noteInfos: {
     width: '70%',
@@ -247,16 +268,18 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
   },
-  
+  image: {
+    width: 200,
+    height: 200,
+  },
   emptyListText: {
     textAlign: 'center',
     marginTop: 20,
   },
 
-  appTitle:
-  {
+  appTitle: {
     fontFamily: 'Autography',
     fontSize: 40,
-  }
-  
+  },
 });
+
