@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TextInput, View, FlatList, TouchableOpacity, Alert, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFonts } from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import NotesPage from './NotesPage';
@@ -10,11 +9,7 @@ const Stack = createStackNavigator();
 
 export default function App() {
 
-    const [folder, setFolder] = useState({ title: '', date: '' });
-    const [folders, setFolders] = useState([]);
-    const [editIndex, setEditIndex] = useState(null);
-    const [showForm, setShowForm] = useState(false);
-
+    const [setFolders] = useState([]);
     useEffect(() => {
         loadFolders();
     }, []);
@@ -22,10 +17,6 @@ export default function App() {
     useEffect(() => {
         initializeDefaultFolder();
     }, []);
-
-    const [fontsLoaded] = useFonts({
-        'Autography': require('./assets/fonts/Autography.otf'),
-    });
 
     const initializeDefaultFolder = async () => {
         const storedFolders = await AsyncStorage.getItem('folders');
@@ -46,98 +37,12 @@ export default function App() {
         }
     };
 
-    const saveFolder = async () => {
-        if (folder.title === '') {
-            Alert.alert('Error', 'Please fill in the title.');
-            return;
-        }
-
-        const cDate = new Date();
-        folder.date = cDate.toDateString();
-
-        let newFolders = [...folders];
-        if (editIndex !== null) {
-            newFolders[editIndex] = folder;
-            setEditIndex(null);
-        } else {
-            newFolders = [...folders, folder];
-        }
-
-        await AsyncStorage.setItem('folders', JSON.stringify(newFolders));
-        setFolders(newFolders);
-        setFolder({ title: '', date: '' });
-        setShowForm(false);
-    };
-
-    const deleteFolder = async (index) => {
-        const newFolders = [...folders];
-        newFolders.splice(index, 1);
-        await AsyncStorage.setItem('folders', JSON.stringify(newFolders));
-        setFolders(newFolders);
-    };
-
     const loadFolders = async () => {
         const storedFolders = await AsyncStorage.getItem('folders');
         if (storedFolders) {
             setFolders(JSON.parse(storedFolders));
         }
     };
-
-    const deleteFolderAlert = (index) => {
-        Alert.alert(
-            'Delete Folder',
-            'Are you sure you want to delete this folder?',
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                },
-                {
-                    text: 'OK',
-                    onPress: () => deleteFolder(index),
-                },
-            ],
-            { cancelable: false },
-        );
-    };
-
-    const editFolder = (index) => {
-        setFolder(folders[index]);
-        setEditIndex(index);
-        setShowForm(true);
-    };
-
-    const renderEditButton = (index) => {
-        return (
-            <TouchableOpacity onPress={() => editFolder(index)} style={styles.editButton}>
-                <Text style={styles.buttonText}>Edit</Text>
-            </TouchableOpacity>
-        );
-    };
-
-    const renderDeleteButton = (index) => {
-        if (folders[index].title === 'Geral') return null;
-        return (
-            <TouchableOpacity onPress={() => deleteFolderAlert(index)} style={styles.deleteButton}>
-                <Text style={styles.buttonText}>Delete</Text>
-            </TouchableOpacity>
-        );
-    };
-
-    const renderItem = ({ item, index }) => (
-        <View style={styles.folderContainer} key={index}>
-            <TouchableOpacity
-                style={styles.folder}
-                onPress={() => navigation.navigate('Notes', { folder: item })}
-            >
-                <Text style={styles.folderText}>{item.title}</Text>
-            </TouchableOpacity>
-            <View style={styles.buttonsContainer}>
-                {renderEditButton(index)}
-                {renderDeleteButton(index)}
-            </View>
-        </View>
-    );
 
     return (
         <NavigationContainer>
@@ -154,6 +59,7 @@ function FoldersScreen({ navigation }) {
     const [folders, setFolders] = useState([]);
     const [editIndex, setEditIndex] = useState(null);
     const [showForm, setShowForm] = useState(false);
+
 
     useEffect(() => {
         loadFolders();
@@ -277,7 +183,7 @@ function FoldersScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.appTitle}>NiN</Text>
+            <Text style={[styles.appTitle]}>NiN</Text>
             <Text style={styles.sectionTitle}>Folders</Text>
             <View style={styles.separator} />
             <FlatList
