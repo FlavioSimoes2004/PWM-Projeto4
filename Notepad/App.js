@@ -4,11 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import NotesPage from './NotesPage';
+import { useFonts } from 'expo-font';
 
 const Stack = createStackNavigator();
 
 export default function App() {
-
+    const [fontsLoaded] = useFonts({
+        'Autography': require('./assets/fonts/Autography.otf'),
+    });
     const [setFolders] = useState([]);
     useEffect(() => {
         loadFolders();

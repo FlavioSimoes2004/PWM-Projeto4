@@ -3,7 +3,6 @@ import { StyleSheet, Text, TextInput, Button, View, FlatList, TouchableOpacity, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import GradientText from './components/GradientText'
-import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications'
 
 Notifications.setNotificationHandler({
@@ -14,7 +13,7 @@ Notifications.setNotificationHandler({
     })
 })
 
-export default function App() {
+export default function NotesPage() {
 
     const [note, setNote] = useState({ title: '', description: '', date: '', reminder: new Date() });
     const [notes, setNotes] = useState([]);
@@ -254,7 +253,7 @@ const styles = StyleSheet.create({
         elevation: 5,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: '20%',
+        marginTop: '10%',
         marginBottom: '5%'
     },
 
