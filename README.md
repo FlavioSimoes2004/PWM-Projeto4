@@ -8,6 +8,7 @@
 - Uso do react native
 - Interface visual fácil de entender
 - App simples
+- Fluxograma e demonstrações dentro do slide
 
 # ADICIONAL
 - As anotações ficam salvas, ou seja, ao abrir o app novamente, todas as anotações que anteriormente foram inseridas, ainda continuarão lá.
